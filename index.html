@@ -1,15 +1,843 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LaSuMa — Calculadora de Parque Eólico</title>
-  <meta http-equiv="refresh" content="0; url=./lasuma_calculadora_eolica_v22.html">
-  <link rel="canonical" href="./lasuma_calculadora_eolica_v22.html">
-  <script>location.replace('./lasuma_calculadora_eolica_v22.html');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaSuMa · Calculadora de Parque Eólico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
 </head>
-<body style="font-family:system-ui,sans-serif;padding:2rem;text-align:center">
-  <p>Redirigiendo a la calculadora…<br>
-  <a href="./lasuma_calculadora_eolica_v22.html">Abrir LaSuMa</a></p>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">
+      <span class="badge">Proyecto LaSuMa</span>
+      <span class="badge-muted">Río Cuarto · Achiras · Córdoba · ARG<br>
+				Nogaro, Susana  · Roldán, Laila · Vargas, Mateo</span>
+    </div>
+    <h1>Calculadora de<br><span>Parque Eólico</span></h1>
+    <p>Herramienta de dimensionado para estimar generación, superficie e impacto de un parque eólico onshore. Ajustá los parámetros y los resultados se actualizan en tiempo real.</p>
+  </div>
+
+  <!-- TAB NAVIGATION -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" id="tab-btn-parque" onclick="switchTab('parque')">⚡ Dimensionado</button>
+    <button class="tab-btn eco"    id="tab-btn-eco"    onclick="switchTab('eco')">💰 Análisis Económico</button>
+    <button class="tab-btn report-btn" id="tab-btn-report" onclick="generarInforme()" title="Generar informe imprimible / PDF con los valores actuales">🖨 Informe</button>
+    <button class="tab-btn export-btn" id="tab-btn-export" onclick="exportarParque()" title="Exportar versión interactiva con valores actuales">↓ Exportar</button>
+  </nav>
+
+  <!-- TAB: DIMENSIONADO -->
+  <div class="tab-page active" id="tab-parque">
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-label">Parámetros del parque</div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">N° de aerogeneradores</span>
+          <span class="slider-value" id="out-n">15</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-n"></div>
+          <input type="range" min="1" max="50" value="15" step="1" id="sl-n">
+        </div>
+        <div class="slider-limits"><span>1</span><span>50</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Potencia por turbina</span>
+          <span class="slider-value highlight" id="out-mw">6.2 MW</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-mw"></div>
+          <input type="range" min="1.0" max="15.0" value="6.2" step="0.1" id="sl-mw">
+        </div>
+        <div class="slider-limits"><span>1.0 MW</span><span>15.0 MW</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Factor de capacidad</span>
+          <span class="slider-value highlight" id="out-fc">45 %</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-fc"></div>
+          <input type="range" min="20" max="80" value="47" step="1" id="sl-fc">
+        </div>
+        <div class="slider-limits"><span>20 %</span><span>80 %</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Separación paralela al viento (↑)</span>
+          <span class="slider-value" id="out-sep-par">7.0 D</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-sep-par"></div>
+          <input type="range" min="4.0" max="12.0" value="7.0" step="0.5" id="sl-sep-par">
+        </div>
+        <div class="slider-limits"><span>4 D</span><span>12 D</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Separación transversal al viento (→)</span>
+          <span class="slider-value" id="out-sep-trans">4.0 D</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-sep-trans"></div>
+          <input type="range" min="2.0" max="8.0" value="4.0" step="0.5" id="sl-sep-trans">
+        </div>
+        <div class="slider-limits"><span>2 D</span><span>8 D</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Diámetro del rotor</span>
+          <span class="slider-value" id="out-diam">162 m</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-diam"></div>
+          <input type="range" min="60" max="220" value="162" step="1" id="sl-diam">
+        </div>
+        <div class="slider-limits"><span>60 m</span><span>220 m</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Consumo por hogar</span>
+          <span class="slider-value" id="out-hog">2.4 MWh/año</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-hog"></div>
+          <input type="range" min="1.0" max="8.0" value="2.4" step="0.1" id="sl-hog">
+        </div>
+        <div class="slider-limits"><span>1 MWh</span><span>8 MWh</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Factor de emisión (CO₂)</span>
+          <span class="slider-value" id="out-co2f">0.43 kg/kWh</span>
+        </div>
+        <div class="range-wrap">
+          <div class="slider-track-fill" id="fill-co2f"></div>
+          <input type="range" min="0.20" max="1.00" value="0.43" step="0.01" id="sl-co2f">
+        </div>
+        <div class="slider-limits"><span>0.20 (red limpia)</span><span>1.00 (carbón)</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- WIND DIRECTION COMPASS -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Dirección del viento predominante</span>
+          <span class="slider-value highlight" id="out-wind-dir">225°  (SO)</span>
+        </div>
+        <div class="compass-wrap">
+          <canvas id="compass-canvas" width="120" height="120" title="Arrastrá para cambiar la dirección del viento"></canvas>
+          <div class="compass-info">
+            <div class="compass-hint">↺ Arrastrá la flecha</div>
+            <div class="compass-cardinals">
+              <span>El viento <em>sopla desde</em> el ángulo indicado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PARK ROTATION COMPASS -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Rotación del parque</span>
+          <span class="slider-value highlight" id="out-park-rot">0°  (alineado al viento)</span>
+        </div>
+        <div class="compass-wrap">
+          <canvas id="park-compass-canvas" width="120" height="120" title="Arrastrá para rotar la grilla del parque"></canvas>
+          <div class="compass-info">
+            <div class="compass-hint" style="color:var(--accent2);">↺ Arrastrá la flecha</div>
+            <div class="compass-cardinals">
+              <span>Rota la grilla <em>independiente</em> del viento</span>
+            </div>
+            <button id="park-rot-reset" style="margin-top:6px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:4px 10px;border-radius:6px;border:1px solid rgba(26,122,48,0.3);background:transparent;color:var(--accent2);cursor:pointer;">↺ Resetear</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /panel left -->
+
+    <!-- RIGHT: RESULTADOS -->
+    <div class="results-col">
+
+      <div class="hero-metric">
+        <div class="metric-cell">
+          <div class="metric-label">Potencia instalada</div>
+          <div class="metric-value green" id="r-mw">—</div>
+          <div class="metric-unit">MW totales</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">Generación anual</div>
+          <div class="metric-value" id="r-gwh">—</div>
+          <div class="metric-unit">GWh / año</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">Hogares equivalentes</div>
+          <div class="metric-value gold" id="r-hog-n">—</div>
+          <div class="metric-unit" id="r-hog-unit">a 2.4 MWh/año</div>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card c-green">
+          <span class="card-icon">⚡</span>
+          <div class="card-label">Energía / turbina</div>
+          <div class="card-val" id="r-gwh-u">—</div>
+          <div class="card-sub">GWh por unidad / año</div>
+        </div>
+        <div class="card c-gold">
+          <span class="card-icon">🌿</span>
+          <div class="card-label">CO₂ evitado / año</div>
+          <div class="card-val" id="r-co2">—</div>
+          <div class="card-sub" id="r-co2-sub">vs. generación convencional</div>
+        </div>
+        <div class="card c-blue">
+          <span class="card-icon">🕐</span>
+          <div class="card-label">Horas equivalentes</div>
+          <div class="card-val" id="r-horas">—</div>
+          <div class="card-sub">hs/año a plena carga</div>
+        </div>
+        <div class="card c-teal">
+          <span class="card-icon">📅</span>
+          <div class="card-label">Generación en 25 años</div>
+          <div class="card-val" id="r-25y">—</div>
+          <div class="card-sub">TWh vida útil estimada</div>
+        </div>
+      </div>
+
+      <!-- SUPERFICIE -->
+      <div class="surface-panel">
+        <div class="panel-label">Superficie e impacto territorial</div>
+        <div class="surface-grid">
+          <div class="surface-item">
+            <div class="surface-item-label">Separación real</div>
+            <div class="surface-item-val" id="r-dist">—</div>
+            <div class="surface-item-unit">↑ paralela / → transversal</div>
+          </div>
+          <div class="surface-item">
+            <div class="surface-item-label">Área total del parque</div>
+            <div class="surface-item-val" id="r-sup">—</div>
+            <div class="surface-item-unit">entre torres</div>
+          </div>
+          <div class="surface-item">
+            <div class="surface-item-label">Huella física real</div>
+            <div class="surface-item-val" id="r-huella">—</div>
+            <div class="surface-item-unit">infraestructura (~2%)</div>
+          </div>
+        </div>
+        <div class="surface-grid" style="margin-top:10px">
+          <div class="surface-item">
+            <div class="surface-item-label">Densidad de potencia</div>
+            <div class="surface-item-val" id="r-dens">—</div>
+            <div class="surface-item-unit">MW / km²</div>
+          </div>
+          <div class="surface-item">
+            <div class="surface-item-label">Suelo libre</div>
+            <div class="surface-item-val" id="r-libre">~98%</div>
+            <div class="surface-item-unit">para uso agropecuario</div>
+          </div>
+	  <div class="surface-item">
+           	    <div class="surface-item-label">Disposición del layout</div>
+           	   <div class="surface-item-val" id="r-layout">—</div>
+            	   <div class="surface-item-unit" id="r-layout-sub">— · —</div>
+          	  </div>
+        </div>
+
+        <div class="land-visual">
+          <div class="land-bar-label">Uso del suelo — área total del parque</div>
+          <div class="land-bar-track">
+            <div class="land-bar-used" id="land-bar-fill" style="width:2%">
+              <span id="land-bar-text">~2%</span>
+            </div>
+          </div>
+          <div class="land-legend">
+            <div class="land-legend-item"><div class="dot dot-teal"></div>Infraestructura eólica (~2%)</div>
+            <div class="land-legend-item"><div class="dot dot-muted"></div>Disponible para agricultura / ganadería</div>
+          </div>
+        </div>
+
+        <div class="note-box">
+          El <strong>97–99%</strong> de la superficie total puede usarse simultáneamente para ganadería, agricultura o conservación de suelo nativo. Las fundaciones de cada aerogenerador ocupan ~500 m² y los caminos internos representan ~0,5% del área total.
+        </div>
+      </div>
+
+      <!-- FÓRMULA VIVA -->
+      <div class="formula-strip">
+        <div class="formula-label">Cálculo de generación</div>
+        <div class="formula-eq">
+          <span class="f-green">GWh/año</span> = N × P × 8.760 × <span class="f-blue">FC</span> / 1000
+        </div>
+        <div class="formula-live" id="formula-live">
+          — × — MW × 8.760 hs × — / 1000
+        </div>
+      </div>
+
+    </div><!-- /results-col -->
+
+    <!-- DIAGRAM — FULL WIDTH -->
+    <div class="diagram-panel" style="grid-column: 1 / -1;">
+      <div class="panel-label" style="justify-content: space-between; display:flex; align-items:center;">
+        <span>Layout del parque · escala proporcional</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="canvas-rows-control" style="position:static; box-shadow:none; border-color:var(--border2);">
+            <button class="rows-btn" id="rows-dec-btn" title="Menos filas">−</button>
+            <div class="rows-display" id="rows-display" title="Clic para editar · Enter para confirmar">
+              <span class="rows-display-label">Filas</span>
+              <span class="rows-display-val auto-mode" id="rows-display-val">auto</span>
+            </div>
+            <button class="rows-btn" id="rows-inc-btn" title="Más filas">+</button>
+            <button class="rows-reset-btn hidden" id="rows-reset-btn" title="Volver a automático">auto</button>
+          </div>
+          <button class="stagger-toggle active" id="stagger-toggle-btn" title="Alternar entre grilla desfasada y alineada" onclick="toggleStagger()">
+            ⊟ Desfase
+          </button>
+        </div>
+      </div>
+
+      <div class="drag-hint-bar">
+        <span>✦</span> Arrastrá turbinas para mover · doble clic para resetear posiciones · <strong>Scroll</strong> para zoom · <strong>Clic + arrastrar fondo</strong> para mover vista
+      </div>
+      <div class="diagram-canvas-wrap">
+        <div class="canvas-zoom-controls">
+          <button class="zoom-btn" id="zoom-in-btn" title="Acercar">+</button>
+          <button class="zoom-btn zoom-reset-btn" id="zoom-reset-btn" title="Restablecer vista">1:1</button>
+          <button class="zoom-btn" id="zoom-out-btn" title="Alejar">−</button>
+        </div>
+        <canvas id="park-canvas" width="930" height="480"></canvas>
+        <button class="view3d-btn" id="open-3d-btn" style="position:absolute; top:14px; left:14px;" title="Renderizar el parque en 3D">
+          <span class="v3d-ico">🧊</span> Ver en 3D
+        </button>
+      </div>
+
+      <div class="diagram-legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#1a7a30; width:10px; height:10px;"></div>
+          Aerogenerador (fundación)
+        </div>
+        <div class="legend-item">
+          <div class="legend-ring" style="border-color:rgba(26,122,48,0.25); width:14px; height:14px;"></div>
+          Zona de influencia (D × separación)
+        </div>
+        <div class="legend-item">
+          <div style="width:20px; height:2px; background:rgba(26,79,160,0.5);"></div>
+          Estela de viento (dirección configurable)
+        </div>
+        <div class="legend-item" style="margin-left:auto;">
+          <span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);" id="diagram-info">— turbinas · área —</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /layout -->
+
+  <div class="footer-note">
+    <strong>Proyecto LaSuMa</strong> — Parque Eólico Río Cuarto / Achiras, Córdoba, Argentina<br>
+          Nogaro Blaser, Rocio Susana · Roldán, Laila Oreana · Vargas Llanos, Mateo<br>
+    Herramienta de dimensionado preliminar con fines académicos y de presentación.<br>
+    Los resultados son estimativos. La generación real depende de medición de viento en sitio (mín. 12 meses), pérdidas de red, disponibilidad técnica y efecto estela.
+  </div>
+
+  </div><!-- /tab-parque -->
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- TAB: ANÁLISIS ECONÓMICO                                               -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-eco">
+
+    <div class="eco-layout">
+
+      <!-- LEFT: PARÁMETROS ECONÓMICOS -->
+      <div class="eco-panel">
+        <div class="eco-panel-label">Parámetros económicos</div>
+
+        <!-- Read-only from parque tab -->
+        <div class="eco-readonly-group">
+          <div class="eco-readonly-label">Desde el dimensionado</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+            <div>
+              <div class="eco-readonly-label">Potencia instalada</div>
+              <div class="eco-readonly-val" id="e-potTotal">—</div>
+              <div class="eco-readonly-sub">MW totales</div>
+            </div>
+            <div>
+              <div class="eco-readonly-label">Generación anual</div>
+              <div class="eco-readonly-val" id="e-gwhAnio">—</div>
+              <div class="eco-readonly-sub">GWh / año</div>
+            </div>
+            <div>
+              <div class="eco-readonly-label">Factor capacidad</div>
+              <div class="eco-readonly-val" id="e-fc">—</div>
+              <div class="eco-readonly-sub">% hora</div>
+            </div>
+          </div>
+        </div><!-- /eco-readonly-group -->
+
+        <!-- Precio de venta — ahora editable acá -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-name">Precio de venta de energía</span>
+            <span class="slider-value highlight" id="out-precio">80.0 U$S/MWh</span>
+          </div>
+          <div class="eco-input-row">
+            <div class="range-wrap" style="flex:1">
+              <div class="slider-track-fill" id="fill-precio"></div>
+              <input type="range" min="0" max="200" value="80" step="0.5" id="sl-precio">
+            </div>
+            <input type="number" class="eco-number-input" id="num-precio" value="80" min="0" max="200" step="0.5">
+            <span class="eco-unit">U$S/MWh</span>
+          </div>
+          <div class="slider-limits"><span>0</span><span>200 U$S/MWh</span></div>
+        </div>
+
+        <!-- Venta anual — resultado inmediato del precio -->
+        <div class="eco-readonly-group" style="background:linear-gradient(135deg,#fffdf5,#fff8e1);border-color:rgba(138,98,0,0.2);">
+          <div class="eco-readonly-label" style="color:var(--gold);">Venta anual de energía estimada</div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-top:4px;">
+            <div class="eco-readonly-val" id="e-venta" style="color:var(--gold);font-size:26px;">—</div>
+            <div class="eco-readonly-sub" id="e-venta-sub">U$S / año</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Inversión por MW -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-name">Inversión por MW instalado</span>
+            <span class="slider-value highlight" id="out-inversion">1.60 M U$S/MW</span>
+          </div>
+          <div class="eco-input-row">
+            <div class="range-wrap" style="flex:1">
+              <div class="slider-track-fill" id="fill-inversion"></div>
+              <input type="range" min="0.5" max="3.0" value="1.6" step="0.01" id="sl-inversion">
+            </div>
+            <input type="number" class="eco-number-input" id="num-inversion" value="1.60" min="0.5" max="3.0" step="0.01">
+            <span class="eco-unit">M U$S/MW</span>
+          </div>
+          <div class="slider-limits"><span>0.5</span><span>3.0 M U$S/MW</span></div>
+        </div>
+
+        <!-- OPEX anual -->
+        <div class="slider-group">
+          <div class="slider-header" style="margin-bottom:12px;">
+            <span class="slider-name">OPEX anual</span>
+            <button class="stagger-toggle active" id="opex-mode-btn" title="Alternar entre desglose por componentes y % del CAPEX" onclick="toggleOpexMode()">⊞ Desagregado</button>
+          </div>
+
+          <!-- MODO DESAGREGADO -->
+          <div id="opex-desg">
+            <div class="opex-comp-row">
+              <span class="opex-comp-name">O&amp;M Vestas</span>
+              <input type="number" class="eco-number-input" id="num-om" value="36" min="0" max="120" step="1" style="width:64px;">
+              <span class="eco-unit">U$S/kW-año</span>
+            </div>
+            <div class="opex-comp-row">
+              <span class="opex-comp-name">Arrendamiento</span>
+              <input type="number" class="eco-number-input" id="num-arrend" value="3" min="0" max="15" step="0.1" style="width:64px;">
+              <span class="eco-unit">% de ingresos</span>
+            </div>
+            <div class="opex-comp-row">
+              <span class="opex-comp-name">Seguros</span>
+              <input type="number" class="eco-number-input" id="num-seg" value="0.4" min="0" max="3" step="0.05" style="width:64px;">
+              <span class="eco-unit">% del CAPEX</span>
+            </div>
+            <div class="opex-comp-row">
+              <span class="opex-comp-name">CAMMESA / transporte</span>
+              <input type="number" class="eco-number-input" id="num-cammesa" value="0.30" min="0" max="5" step="0.05" style="width:64px;">
+              <span class="eco-unit">M U$S/año</span>
+            </div>
+            <div class="opex-comp-row">
+              <span class="opex-comp-name">Administración / G&amp;A</span>
+              <input type="number" class="eco-number-input" id="num-admin" value="0.30" min="0" max="5" step="0.05" style="width:64px;">
+              <span class="eco-unit">M U$S/año</span>
+            </div>
+            <div class="opex-comp-row">
+              <span class="opex-comp-name">Mantenimiento BoP</span>
+              <input type="number" class="eco-number-input" id="num-bop" value="0.20" min="0" max="5" step="0.05" style="width:64px;">
+              <span class="eco-unit">M U$S/año</span>
+            </div>
+            <div class="opex-comp-hint">O&amp;M y seguros se recalculan con la potencia y el CAPEX del dimensionado. El arrendamiento varía con la generación (degradación).</div>
+          </div>
+
+          <!-- MODO % CAPEX (simple) -->
+          <div id="opex-pct" style="display:none;">
+            <div class="slider-header">
+              <span class="slider-name">OPEX como % del CAPEX</span>
+              <span class="slider-value highlight" id="out-opex">2.5 % CAPEX</span>
+            </div>
+            <div class="eco-input-row">
+              <div class="range-wrap" style="flex:1">
+                <div class="slider-track-fill" id="fill-opex"></div>
+                <input type="range" min="0.5" max="6.0" value="2.5" step="0.1" id="sl-opex">
+              </div>
+              <input type="number" class="eco-number-input" id="num-opex" value="2.5" min="0.5" max="6.0" step="0.1">
+              <span class="eco-unit">% / año</span>
+            </div>
+            <div class="slider-limits"><span>0.5 %</span><span>6.0 %</span></div>
+          </div>
+        </div>
+
+        <!-- Tasa de descuento -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-name">Tasa de descuento (WACC)</span>
+            <span class="slider-value highlight" id="out-wacc">8.0 %</span>
+          </div>
+          <div class="eco-input-row">
+            <div class="range-wrap" style="flex:1">
+              <div class="slider-track-fill" id="fill-wacc"></div>
+              <input type="range" min="0.0" max="20.0" value="8.0" step="0.1" id="sl-wacc">
+            </div>
+            <input type="number" class="eco-number-input" id="num-wacc" value="8.0" min="0.0" max="20.0" step="0.1">
+            <span class="eco-unit">% anual</span>
+          </div>
+          <div class="slider-limits"><span>2 %</span><span>20 %</span></div>
+        </div>
+
+        <!-- Degradación anual -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-name">Degradación de generación</span>
+            <span class="slider-value" id="out-degrad">0.5 %/año</span>
+          </div>
+          <div class="range-wrap">
+            <div class="slider-track-fill" id="fill-degrad"></div>
+            <input type="range" min="0.0" max="2.0" value="0.5" step="0.1" id="sl-degrad">
+          </div>
+          <div class="slider-limits"><span>0 %</span><span>2 %/año</span></div>
+        </div>
+
+        <!-- Vida útil -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-name">Vida útil del parque</span>
+            <span class="slider-value" id="out-vida">25 años</span>
+          </div>
+          <div class="range-wrap">
+            <div class="slider-track-fill" id="fill-vida"></div>
+            <input type="range" min="15" max="35" value="25" step="1" id="sl-vida">
+          </div>
+          <div class="slider-limits"><span>15 años</span><span>35 años</span></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ── TRATAMIENTO FISCAL (RIGI) ── -->
+        <div class="eco-panel-label" style="margin-bottom:16px;">Tratamiento fiscal · RIGI</div>
+
+        <!-- Alícuota IIGG -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-name">Alícuota Impuesto a las Ganancias</span>
+            <span class="slider-value highlight" id="out-alicuota">25.0 %</span>
+          </div>
+          <div class="eco-input-row">
+            <div class="range-wrap" style="flex:1">
+              <div class="slider-track-fill" id="fill-alicuota"></div>
+              <input type="range" min="0" max="40" value="25" step="0.5" id="sl-alicuota">
+            </div>
+            <input type="number" class="eco-number-input" id="num-alicuota" value="25" min="0" max="40" step="0.5">
+            <span class="eco-unit">%</span>
+          </div>
+          <div class="slider-limits"><span>0 %</span><span>RIGI 25% · general 35%</span></div>
+        </div>
+
+        <!-- Amortización acelerada: % bienes muebles -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-name">Amort. acelerada · bienes muebles</span>
+            <span class="slider-value highlight" id="out-mueblespct">75 %</span>
+          </div>
+          <div class="eco-input-row">
+            <div class="range-wrap" style="flex:1">
+              <div class="slider-track-fill" id="fill-mueblespct"></div>
+              <input type="range" min="0" max="100" value="75" step="1" id="sl-mueblespct">
+            </div>
+            <input type="number" class="eco-number-input" id="num-mueblespct" value="75" min="0" max="100" step="1">
+            <span class="eco-unit">% CAPEX</span>
+          </div>
+          <div class="slider-limits"><span>aerogen. + eléctrico</span><span>obra civil: <span id="out-civilpct">25 %</span></span></div>
+        </div>
+
+        <!-- Años de amortización -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;">
+          <div>
+            <div class="eco-readonly-label">Cuotas bienes muebles</div>
+            <div class="eco-input-row" style="margin-top:4px;">
+              <input type="number" class="eco-number-input" id="num-mueblesanos" value="2" min="1" max="10" step="1" style="width:56px;">
+              <span class="eco-unit">años</span>
+            </div>
+          </div>
+          <div>
+            <div class="eco-readonly-label">Años obra civil</div>
+            <div class="eco-input-row" style="margin-top:4px;">
+              <input type="number" class="eco-number-input" id="num-civilanos" value="12" min="1" max="20" step="1" style="width:56px;">
+              <span class="eco-unit">años</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vencimiento de quebrantos -->
+        <div class="slider-group">
+          <div class="eco-readonly-label">Vencimiento de quebrantos (trasladables, FIFO)</div>
+          <div class="eco-input-row" style="margin-top:4px;">
+            <input type="number" class="eco-number-input" id="num-quebvenc" value="5" min="0" max="10" step="1" style="width:56px;">
+            <span class="eco-unit">años desde su generación</span>
+          </div>
+        </div>
+
+        <div class="eco-note">
+          El modelo usa <strong>flujo de caja descontado (DCF)</strong> sobre el flujo después de impuestos. La base imponible = EBITDA − amortización del año; la <strong>amortización acelerada RIGI</strong> genera quebrantos los primeros años, trasladables (FIFO) hasta su vencimiento. Impuesto = máx(0, base − quebrantos) × alícuota. El CAPEX se invierte en el año 0.
+        </div>
+      </div><!-- /eco-panel left -->
+
+      <!-- RIGHT: RESULTADOS -->
+      <div class="eco-results-col">
+
+        <!-- KPI strip -->
+        <div class="eco-kpi-grid">
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">CAPEX total</div>
+            <div class="eco-kpi-val blue" id="e-capex">—</div>
+            <div class="eco-kpi-unit">M U$S inversión inicial</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">Ingreso anual bruto</div>
+            <div class="eco-kpi-val green" id="e-ingreso">—</div>
+            <div class="eco-kpi-unit">M U$S / año (año 1)</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">OPEX anual</div>
+            <div class="eco-kpi-val" id="e-opex-val">—</div>
+            <div class="eco-kpi-unit">M U$S / año (año 1)</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">EBITDA año 1</div>
+            <div class="eco-kpi-val green" id="e-flujo">—</div>
+            <div class="eco-kpi-unit">M U$S (ingresos − OPEX)</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">Payback simple</div>
+            <div class="eco-kpi-val gold" id="e-payback">—</div>
+            <div class="eco-kpi-unit">años (post-impuestos)</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">Payback descontado</div>
+            <div class="eco-kpi-val gold" id="e-payback-disc">—</div>
+            <div class="eco-kpi-unit">años (post-imp. · WACC)</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">VAN · antes de imp.</div>
+            <div class="eco-kpi-val" id="e-van">—</div>
+            <div class="eco-kpi-unit">M U$S · operativo</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">VAN · después de imp.</div>
+            <div class="eco-kpi-val" id="e-van-post">—</div>
+            <div class="eco-kpi-unit">M U$S · al inversor</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">LCOE @WACC</div>
+            <div class="eco-kpi-val" id="e-lcoe">—</div>
+            <div class="eco-kpi-unit">U$S/MWh · costo nivelado</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">TIR · antes de imp.</div>
+            <div class="eco-kpi-val" id="e-tir">—</div>
+            <div class="eco-kpi-unit">% · operativo</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">TIR · después de imp.</div>
+            <div class="eco-kpi-val" id="e-tir-post">—</div>
+            <div class="eco-kpi-unit">% · al inversor</div>
+          </div>
+          <div class="eco-kpi-cell">
+            <div class="eco-kpi-label">Flujo acum. post-imp.</div>
+            <div class="eco-kpi-val green" id="e-flujoacum-post">—</div>
+            <div class="eco-kpi-unit">M U$S (sin descontar)</div>
+          </div>
+        </div>
+
+        <!-- GANANCIA NETA — card destacada -->
+        <div class="eco-ganancia-card" id="eco-ganancia-wrap">
+          <div class="eco-ganancia-label">Ganancia neta · vida útil · después de impuestos</div>
+          <div class="eco-kpi-val-big positive" id="e-ganancia">—</div>
+          <div class="eco-ganancia-sub">Flujo de fondos neto acumulado (post-impuestos) − CAPEX inicial · sin descontar</div>
+        </div>
+
+        <!-- Cashflow chart -->
+        <div class="eco-chart-panel">
+          <div class="eco-panel-label" style="margin-bottom:16px;">Flujo de caja acumulado · vida útil</div>
+          <canvas id="cashflow-canvas" width="580" height="220"></canvas>
+        </div>
+
+      </div><!-- /eco-results-col -->
+
+    </div><!-- /eco-layout -->
+
+    <div class="footer-note" style="margin-top:40px;">
+      <strong>Análisis económico preliminar</strong> — Los valores son estimativos y no constituyen asesoramiento financiero.<br>
+      CAPEX típico eólico onshore ARG 2024: 1.2–1.8 M U$S/MW. OPEX: 2–3% del CAPEX anual. Vida útil: 20–30 años.
+    </div>
+
+  </div><!-- /tab-eco -->
+
+</div><!-- /wrapper -->
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- INFORME IMPRIMIBLE / PDF  (oculto en pantalla, visible solo al imprimir) -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="report-doc" id="report-doc">
+
+  <!-- Portada -->
+  <div class="rep-header">
+    <div class="rep-eyebrow">Parque Eólico · Informe de dimensionado y análisis económico</div>
+    <div class="rep-title">Proyecto LaSuMa</div>
+    <div class="rep-subtitle">Río Cuarto / Achiras · Córdoba, Argentina</div>
+    <div class="rep-meta">
+      <span class="rep-team">Nogaro Blaser, Rocío Susana · Roldán, Laila Oreana · Vargas Llanos, Mateo</span>
+      <span id="rep-fecha">—</span>
+    </div>
+  </div>
+
+  <!-- Titulares -->
+  <div class="rep-headline">
+    <div class="rep-hl-cell"><div class="rep-hl-val" id="rep-pot">—</div><div class="rep-hl-lbl">Potencia instalada</div></div>
+    <div class="rep-hl-cell"><div class="rep-hl-val" id="rep-gen">—</div><div class="rep-hl-lbl">Generación anual</div></div>
+    <div class="rep-hl-cell"><div class="rep-hl-val" id="rep-fc">—</div><div class="rep-hl-lbl">Factor de capacidad</div></div>
+  </div>
+
+  <!-- Diagrama del parque -->
+  <div class="rep-section">
+    <div class="rep-sec-title">Disposición del parque</div>
+    <div class="rep-figure">
+      <img id="rep-img-park" alt="Diagrama del parque eólico">
+      <div class="rep-fig-caption" id="rep-park-info">—</div>
+    </div>
+  </div>
+
+  <!-- Parámetros de dimensionado (entradas) -->
+  <div class="rep-section">
+    <div class="rep-sec-title">Parámetros de dimensionado</div>
+    <div class="rep-params">
+      <div class="rep-param-row"><span class="rep-p-lbl">N.º de aerogeneradores</span><span class="rep-p-val" id="rep-n">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Potencia unitaria</span><span class="rep-p-val" id="rep-mw">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Diámetro de rotor</span><span class="rep-p-val" id="rep-diam">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Separación entre filas</span><span class="rep-p-val" id="rep-seppar">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Separación transversal</span><span class="rep-p-val" id="rep-septrans">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Dirección del viento</span><span class="rep-p-val" id="rep-wind">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Rotación de la grilla</span><span class="rep-p-val" id="rep-rot">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Consumo hogar ref.</span><span class="rep-p-val" id="rep-hog">—</span></div>
+      <div class="rep-param-row"><span class="rep-p-lbl">Factor de emisión</span><span class="rep-p-val" id="rep-co2f">—</span></div>
+    </div>
+  </div>
+
+  <!-- Resultados del dimensionado (salidas) -->
+  <div class="rep-section">
+    <div class="rep-sec-title">Resultados del dimensionado</div>
+    <div class="rep-kpi-grid five">
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Hogares abastecidos</div><div class="rep-kpi-val green" id="rep-hogares">—</div><div class="rep-kpi-unit">viviendas equivalentes</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">CO₂ evitado / año</div><div class="rep-kpi-val green" id="rep-co2">—</div><div class="rep-kpi-unit">toneladas / año</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Horas equivalentes</div><div class="rep-kpi-val" id="rep-horas">—</div><div class="rep-kpi-unit">h/año a plena carga</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Gen. por turbina</div><div class="rep-kpi-val" id="rep-gwhu">—</div><div class="rep-kpi-unit">GWh / año · turbina</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Generación 25 años</div><div class="rep-kpi-val" id="rep-25y">—</div><div class="rep-kpi-unit">TWh acumulados</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Superficie ocupada</div><div class="rep-kpi-val" id="rep-sup">—</div><div class="rep-kpi-unit">área de la grilla</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Huella real</div><div class="rep-kpi-val" id="rep-huella">—</div><div class="rep-kpi-unit">infraestructura (~2%)</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Densidad de potencia</div><div class="rep-kpi-val" id="rep-dens">—</div><div class="rep-kpi-unit">potencia / superficie</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Distancia entre turbinas</div><div class="rep-kpi-val" id="rep-dist" style="font-size:12px;">—</div><div class="rep-kpi-unit">fila / transversal</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Disposición (filas × col)</div><div class="rep-kpi-val" id="rep-layout">—</div><div class="rep-kpi-unit">grilla del parque</div></div>
+    </div>
+  </div>
+
+  <!-- KPIs económicos -->
+  <div class="rep-section rep-pagebreak">
+    <div class="rep-sec-title">Indicadores económicos</div>
+    <div class="rep-kpi-grid">
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">CAPEX total</div><div class="rep-kpi-val blue" id="rep-capex">—</div><div class="rep-kpi-unit">M U$S · inversión inicial</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Ingreso anual bruto</div><div class="rep-kpi-val green" id="rep-ingreso">—</div><div class="rep-kpi-unit">M U$S / año (año 1)</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">OPEX anual</div><div class="rep-kpi-val" id="rep-opex">—</div><div class="rep-kpi-unit">M U$S / año (año 1)</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">EBITDA año 1</div><div class="rep-kpi-val green" id="rep-ebitda">—</div><div class="rep-kpi-unit">M U$S · ingresos − OPEX</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Payback simple</div><div class="rep-kpi-val gold" id="rep-payback">—</div><div class="rep-kpi-unit">años · post-impuestos</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Payback descontado</div><div class="rep-kpi-val gold" id="rep-payback-disc">—</div><div class="rep-kpi-unit">años · post-imp. · WACC</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">LCOE @WACC</div><div class="rep-kpi-val" id="rep-lcoe">—</div><div class="rep-kpi-unit">U$S/MWh · costo nivelado</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">Flujo acum. post-imp.</div><div class="rep-kpi-val green" id="rep-flujoacum">—</div><div class="rep-kpi-unit">M U$S · sin descontar</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">VAN · antes de imp.</div><div class="rep-kpi-val" id="rep-van">—</div><div class="rep-kpi-unit">M U$S · operativo</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">VAN · después de imp.</div><div class="rep-kpi-val" id="rep-van-post">—</div><div class="rep-kpi-unit">M U$S · al inversor</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">TIR · antes de imp.</div><div class="rep-kpi-val" id="rep-tir">—</div><div class="rep-kpi-unit">% · operativo</div></div>
+      <div class="rep-kpi-cell"><div class="rep-kpi-label">TIR · después de imp.</div><div class="rep-kpi-val" id="rep-tir-post">—</div><div class="rep-kpi-unit">% · al inversor</div></div>
+    </div>
+
+    <div class="rep-ganancia">
+      <div class="rep-g-lbl">Ganancia neta · vida útil · después de impuestos</div>
+      <div class="rep-g-val" id="rep-ganancia">—</div>
+      <div class="rep-g-sub">Flujo de fondos neto acumulado (post-impuestos) − CAPEX inicial · sin descontar</div>
+    </div>
+  </div>
+
+  <!-- Flujo de caja + supuestos -->
+  <div class="rep-section">
+    <div class="rep-sec-title">Flujo de caja acumulado y supuestos</div>
+    <div class="rep-figure" style="margin-bottom:14px;">
+      <img id="rep-img-cashflow" alt="Flujo de caja acumulado a lo largo de la vida útil">
+      <div class="rep-fig-caption">Flujo de caja acumulado · vida útil del proyecto</div>
+    </div>
+    <div class="rep-assump">
+      <div class="rep-assump-row"><span class="rep-a-lbl">Precio de venta</span><span class="rep-a-val" id="rep-precio">—</span></div>
+      <div class="rep-assump-row"><span class="rep-a-lbl">Inversión por MW</span><span class="rep-a-val" id="rep-inversion">—</span></div>
+      <div class="rep-assump-row"><span class="rep-a-lbl">OPEX</span><span class="rep-a-val" id="rep-opexpct">—</span></div>
+      <div class="rep-assump-row"><span class="rep-a-lbl">WACC (tasa de descuento)</span><span class="rep-a-val" id="rep-wacc">—</span></div>
+      <div class="rep-assump-row"><span class="rep-a-lbl">Degradación anual</span><span class="rep-a-val" id="rep-degrad">—</span></div>
+      <div class="rep-assump-row"><span class="rep-a-lbl">Vida útil</span><span class="rep-a-val" id="rep-vida">—</span></div>
+      <div class="rep-assump-row"><span class="rep-a-lbl">Alícuota Imp. Ganancias</span><span class="rep-a-val" id="rep-alicuota">—</span></div>
+      <div class="rep-assump-row"><span class="rep-a-lbl">Separación entre filas</span><span class="rep-a-val" id="rep-sep">—</span></div>
+    </div>
+  </div>
+
+  <div class="rep-footer">
+    <strong>Proyecto LaSuMa</strong> — Herramienta de dimensionado preliminar con fines académicos y de presentación.<br>
+    Los resultados son estimativos. La generación real depende de medición de viento en sitio (mín. 12 meses), pérdidas de red, disponibilidad técnica y efecto estela. No constituye asesoramiento financiero.
+  </div>
+
+</div><!-- /report-doc -->
+
+<script src="js/economics.js"></script>
+<script src="js/park2d.js"></script>
+<script src="js/app.js"></script>
+
+<!-- ══════════════════ MODAL VISTA 3D DEL PARQUE ══════════════════ -->
+<div id="park3d-modal" aria-hidden="true">
+  <canvas id="park3d-canvas"></canvas>
+  <div class="p3d-overlay">
+    <div class="p3d-title">Recorrido 3D del parque<small id="p3d-sub">— aerogeneradores</small></div>
+    <button class="p3d-close" id="close-3d-btn" title="Cerrar (Esc)">×</button>
+    <div class="p3d-hud" id="p3d-hud"></div>
+    <div class="p3d-hint">Arrastrá para girar · Rueda / pellizco para zoom<br>Botón derecho para desplazar</div>
+    <div class="p3d-loading" id="p3d-loading">Generando escena…</div>
+  </div>
+</div>
+
+<!-- Three.js (UMD, embebido para funcionamiento offline) -->
+<script src="js/three.min.js"></script>
+
+<!-- Motor de la vista 3D -->
+<script src="js/park3d.js"></script>
 </body>
 </html>

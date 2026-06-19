@@ -1,6 +1,6 @@
 # LaSuMa — Calculadora de Parque Eólico
 
-Herramienta interactiva de **dimensionado y análisis económico** de un parque eólico onshore. Todo corre en un **único archivo HTML autocontenido** (sin instalación, sin servidor, sin dependencias externas): se abre directo en el navegador y también funciona offline.
+Herramienta interactiva de **dimensionado y análisis económico** de un parque eólico onshore. **Sin instalación, sin servidor, sin paso de build**: se abre directo en el navegador (incluso offline, con doble clic en `index.html`).
 
 🔗 **Versión online:** https://mateovargas0305-cmyk.github.io/LaSuMa/
 
@@ -15,11 +15,24 @@ Herramienta interactiva de **dimensionado y análisis económico** de un parque 
 ## Uso
 
 - **Online:** abrí el [link de GitHub Pages](https://mateovargas0305-cmyk.github.io/LaSuMa/).
-- **Local:** descargá `lasuma_calculadora_eolica_v22.html` y abrilo con doble clic en cualquier navegador moderno.
+- **Local:** descargá/cloná el repositorio y abrí `index.html` con doble clic en cualquier navegador moderno (funciona offline, sin servidor).
+
+## Estructura
+
+```
+index.html          → marcado + carga de estilos y scripts
+css/styles.css      → estilos
+js/
+├ economics.js      → modelo financiero (VAN/TIR/LCOE/RIGI) y gráfico de cashflow
+├ park2d.js         → diagrama 2D del parque, brújulas, viewport y animación
+├ app.js            → estado de UI, cálculo del parque, controles, informe/export, init
+├ park3d.js         → vista 3D (motor propio sobre Three.js)
+└ three.min.js      → librería Three.js (r158), local para funcionar offline
+```
 
 ## Tecnología
 
-HTML + CSS + JavaScript puro en un solo archivo. La vista 3D usa [Three.js](https://threejs.org/) (r158) embebido inline para preservar la portabilidad offline.
+HTML + CSS + JavaScript puro, con `<script>` clásicos (sin módulos ni bundler) para que abra por `file://` sin build. La vista 3D usa [Three.js](https://threejs.org/) (r158) servido localmente para preservar la portabilidad offline.
 
 ---
 

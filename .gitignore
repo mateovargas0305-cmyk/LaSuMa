@@ -1,13 +1,16 @@
-# Solo se versiona la calculadora v22 + el sitio (index.html, README).
-# Versiones anteriores, exports, informes y notas internas quedan locales.
+# El proyecto se versiona como estructura multi-archivo: index.html + css/ + js/.
+# Los HTML monolíticos (incluida la v22 ya separada) quedan como respaldo LOCAL.
 lasuma_calculadora_eolica_v19.html
 lasuma_calculadora_eolica_v20.html
 lasuma_calculadora_eolica_v21.html
+lasuma_calculadora_eolica_v22.html
 Tareas claude.txt
 Guardados/
 Informes/
 
-# Artefactos del sistema
+# Artefactos del sistema / herramientas temporales
 Thumbs.db
 .DS_Store
 _chrome_profile*/
+_cp_*/
+*.mjs
