@@ -315,6 +315,14 @@
       <div class="drag-hint-bar">
         <span>✦</span> Arrastrá turbinas para mover · doble clic para resetear posiciones · <strong>Scroll</strong> para zoom · <strong>Clic + arrastrar fondo</strong> para mover vista
       </div>
+
+      <div class="road-toolbar">
+        <span class="road-toolbar-label">🛣 Caminos internos</span>
+        <button class="road-tool-btn" id="road-draw-btn" onclick="toggleRoadDraw()" title="Dibujar un camino con clics en el layout">✏ Dibujar camino</button>
+        <button class="road-tool-btn" id="road-auto-btn" onclick="autoRoadPerimeter()" title="Generar un camino perimetral automático">⚡ Auto perimetral</button>
+        <button class="road-tool-btn road-tool-clear" id="road-clear-btn" onclick="clearRoads()" title="Borrar todos los caminos">🗑 Borrar</button>
+        <span class="road-hint" id="road-hint" style="display:none;">Clic = agregar punto · se pega a las turbinas · doble clic o «Terminar» para cerrar el tramo</span>
+      </div>
       <div class="diagram-canvas-wrap">
         <div class="canvas-zoom-controls">
           <button class="zoom-btn" id="zoom-in-btn" title="Acercar">+</button>
@@ -828,6 +836,7 @@
   <div class="p3d-overlay">
     <div class="p3d-title">Recorrido 3D del parque<small id="p3d-sub">— aerogeneradores</small></div>
     <button class="p3d-close" id="close-3d-btn" title="Cerrar (Esc)">×</button>
+    <div class="p3d-terrain" id="p3d-terrain" title="Cambiar el tipo de terreno"></div>
     <div class="p3d-hud" id="p3d-hud"></div>
     <div class="p3d-hint">Arrastrá para girar · Rueda / pellizco para zoom<br>Botón derecho para desplazar</div>
     <div class="p3d-loading" id="p3d-loading">Generando escena…</div>

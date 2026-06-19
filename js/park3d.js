@@ -14,10 +14,20 @@
   var drag = { on:false, mode:'rotate', x:0, y:0 };
   var pinch = { on:false, d:0 };
 
+  // ── Presets de terreno (relieve + color) ──
+  var TERRAINS = {
+    pampa:   { name:'Pampa',   ground:0x6f8a4d, sky:0x9ec8ec, a1:1.1, a2:0.5, f1:0.005, f2:0.017, f3:0.020 },
+    sierras: { name:'Sierras', ground:0x6e7d56, sky:0x9cc0e0, a1:4.6, a2:2.0, f1:0.009, f2:0.022, f3:0.026 },
+    arido:   { name:'Árido',   ground:0xb09869, sky:0xcfd6d2, a1:2.4, a2:1.1, f1:0.007, f2:0.019, f3:0.023 },
+    costero: { name:'Costero', ground:0x86a463, sky:0xa9d4ec, a1:0.5, a2:0.25,f1:0.004, f2:0.014, f3:0.017 }
+  };
+  var currentTerrain = 'pampa';
+
   function terrainH(x, z) {
-    return (Math.sin(x*0.005)*Math.cos(z*0.005)*2.2
-          + Math.sin(x*0.017+1.3)*0.8
-          + Math.cos(z*0.020-0.7)*0.8);
+    var t = TERRAINS[currentTerrain] || TERRAINS.pampa;
+    return (Math.sin(x*t.f1)*Math.cos(z*t.f1)*t.a1
+          + Math.sin(x*t.f2+1.3)*t.a2
+          + Math.cos(z*t.f3-0.7)*t.a2);
   }
 
   // ── Geometría de pala (perfil afilado, plano en su grosor) ──
@@ -39,6 +49,40 @@
     MAT.nacelle = new THREE.MeshStandardMaterial({ color:0xe8ebef, roughness:0.5,  metalness:0.15 });
     MAT.blade   = new THREE.MeshStandardMaterial({ color:0xfbfcfd, roughness:0.4,  metalness:0.05, side:THREE.DoubleSide });
     MAT.ground  = new THREE.MeshStandardMaterial({ color:0x6f8a4d, roughness:1 });
+    MAT.road    = new THREE.MeshStandardMaterial({ color:0xe7ddc8, roughness:0.95, metalness:0, emissive:0x6b5f44, emissiveIntensity:0.5 }); // ripio claro
+  }
+
+  // Construye una cinta de camino que sigue el terreno desde una polilínea en metros
+  function buildRoadMesh(ptsM, widthW) {
+    if (!ptsM || ptsM.length < 2) return null;
+    var cl = ptsM.map(function(p){ return { x:p.x*WORLD, y:p.z*WORLD }; });  // centerline (x,z) en mundo
+    // resamplear cada ~6 unidades para que la cinta se adapte al relieve
+    var step = 6, samples = [];
+    for (var i=0;i<cl.length-1;i++){
+      var a=cl[i], b=cl[i+1], dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy);
+      var n=Math.max(1, Math.ceil(L/step));
+      for (var j=0;j<n;j++){ samples.push({ x:a.x+dx*(j/n), y:a.y+dy*(j/n) }); }
+    }
+    samples.push(cl[cl.length-1]);
+    var hw=widthW/2, verts=[], idx=[];
+    for (var k=0;k<samples.length;k++){
+      var p=samples[k];
+      var t = (k<samples.length-1) ? { x:samples[k+1].x-p.x, y:samples[k+1].y-p.y }
+                                   : { x:p.x-samples[k-1].x, y:p.y-samples[k-1].y };
+      var tl=Math.hypot(t.x,t.y)||1; t.x/=tl; t.y/=tl;
+      var nx=-t.y, nz=t.x;  // perpendicular en (x,z)
+      var lx=p.x+nx*hw, lz=p.y+nz*hw, rx=p.x-nx*hw, rz=p.y-nz*hw;
+      verts.push(lx, terrainH(lx,lz)+0.2, lz,  rx, terrainH(rx,rz)+0.2, rz);
+    }
+    for (var k2=0;k2<samples.length-1;k2++){
+      var a2=k2*2, b2=k2*2+1, c2=k2*2+2, d2=k2*2+3;
+      idx.push(a2,b2,c2, c2,b2,d2);
+    }
+    var g=new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(verts,3));
+    g.setIndex(idx); g.computeVertexNormals();
+    var m=new THREE.Mesh(g, MAT.road); m.receiveShadow=true;
+    return m;
   }
 
   function buildTurbine(diamM) {
@@ -136,6 +180,15 @@
     });
     var spanM = Math.max(maxX-minX, maxZ-minZ, st.distParM*2) + st.diamM*4;
 
+    // aplicar preset de terreno (color de suelo + tinte de cielo/niebla)
+    var tcfg = TERRAINS[currentTerrain] || TERRAINS.pampa;
+    if (MAT.ground) MAT.ground.color.setHex(tcfg.ground);
+    if (scene) {
+      var sky = new THREE.Color(tcfg.sky);
+      scene.background = sky;
+      if (scene.fog) scene.fog.color.copy(sky);
+    }
+
     // terreno con relieve muy suave; lo bastante grande para que su borde quede
     // tapado por la niebla (fog far = 900) y el horizonte se funda con el cielo
     var halfWorld = 1300;
@@ -164,11 +217,20 @@
       rotors.push(t.pivot);
     });
 
+    // ── Caminos internos (desde el layout 2D) ──
+    if (st.roads && st.roads.length) {
+      var roadW = Math.max(22, st.diamM*0.15) * WORLD;
+      st.roads.forEach(function(r){
+        var rm = buildRoadMesh(r, roadW);
+        if (rm) farm.add(rm);
+      });
+    }
+
     scene.add(farm);
 
     // encuadre de cámara: vista 3/4 baja e inmersiva, centrada en el parque
     orbit.target.set(0, st.diamM*0.5*WORLD, 0);
-    orbit.theta = 0.7; orbit.phi = 1.28;
+    orbit.theta = 0.7; orbit.phi = 1.18;
     orbit.radius = Math.max(70, spanM*WORLD*0.82 + st.diamM*WORLD*1.2);
     spinSpeed = 0.55 + (st.fc||45)/100 * 1.1;
 
@@ -309,6 +371,31 @@
     var closeBtn= document.getElementById('close-3d-btn');
     if (openBtn)  openBtn.addEventListener('click', open);
     if (closeBtn) closeBtn.addEventListener('click', close);
+    buildTerrainSelector();
     bindEvents();
   });
+
+  // ── Selector de terreno (chips en el overlay del modal) ──
+  function setTerrain(id) {
+    if (!TERRAINS[id] || id === currentTerrain) return;
+    currentTerrain = id;
+    var box = document.getElementById('p3d-terrain');
+    if (box) Array.prototype.forEach.call(box.children, function(b){
+      b.classList.toggle('active', b.getAttribute('data-terrain') === id);
+    });
+    if (built && isOpen && scene) rebuildFarm();   // re-genera relieve, color, turbinas y caminos
+  }
+  function buildTerrainSelector() {
+    var box = document.getElementById('p3d-terrain');
+    if (!box) return;
+    box.innerHTML = '';
+    Object.keys(TERRAINS).forEach(function(id){
+      var b = document.createElement('button');
+      b.className = 'p3d-terrain-btn' + (id === currentTerrain ? ' active' : '');
+      b.setAttribute('data-terrain', id);
+      b.textContent = TERRAINS[id].name;
+      b.addEventListener('click', function(){ setTerrain(id); });
+      box.appendChild(b);
+    });
+  }
 })();

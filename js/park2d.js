@@ -235,6 +235,71 @@ let userRows         = null;
 let dragIdx = -1, dragOffX = 0, dragOffY = 0;
 let lastN=0, lastSepPar=0, lastSepTrans=0, lastDiam=0, lastUserRows=null, lastParkRot=0, lastStagger=true;
 
+// ── ROAD STATE ────────────────────────────────────────────────────────────────
+// Caminos internos: cada camino es una polilínea de puntos {x,z} en METROS reales
+// (mismo sistema que window._parkState.positions). Se dibujan en el 2D y viajan al 3D.
+let roads        = [];      // [ [ {x,z}, … ], … ]
+let currentRoad  = null;    // polilínea en edición (mientras drawingRoad)
+let drawingRoad  = false;   // modo "dibujar camino" activo
+let roadPreview  = null;    // {x,z} metros: punto bajo el cursor (rubber-band)
+// Transform del layout (px↔metros), actualizado en cada drawParkDiagram
+let _layout = { cx: 465, cy: 240, scaleUsed: 1, diamM: 162 };
+
+function _pxToM(px, py)  { return { x:(px-_layout.cx)/_layout.scaleUsed, z:(py-_layout.cy)/_layout.scaleUsed }; }
+function _mToPx(m)       { return { x: _layout.cx + m.x*_layout.scaleUsed, y: _layout.cy + m.z*_layout.scaleUsed }; }
+
+function toggleRoadDraw() {
+  drawingRoad = !drawingRoad;
+  if (!drawingRoad) finalizeRoad();       // al apagar el modo, cierra el tramo en curso
+  const btn = document.getElementById('road-draw-btn');
+  const cv  = document.getElementById('park-canvas');
+  if (btn) { drawingRoad ? btn.classList.add('active') : btn.classList.remove('active');
+             btn.textContent = drawingRoad ? '✓ Terminar' : '✏ Dibujar camino'; }
+  if (cv)  cv.style.cursor = drawingRoad ? 'crosshair' : 'default';
+  const hint = document.getElementById('road-hint');
+  if (hint) hint.style.display = drawingRoad ? 'inline' : 'none';
+  calcParque(true);
+}
+
+function finalizeRoad() {
+  if (currentRoad && currentRoad.length >= 2) {
+    // dedupe del último punto (doble clic deja dos puntos casi iguales)
+    const a = currentRoad[currentRoad.length-1], b = currentRoad[currentRoad.length-2];
+    if (Math.hypot(a.x-b.x, a.z-b.z) < _layout.diamM*0.3) currentRoad.pop();
+    if (currentRoad.length >= 2) roads.push(currentRoad);
+  }
+  currentRoad = null; roadPreview = null;
+}
+
+function addRoadPoint(mPt) {
+  if (!currentRoad) currentRoad = [];
+  currentRoad.push(mPt);
+}
+
+function clearRoads() {
+  roads = []; currentRoad = null; roadPreview = null;
+  calcParque(true);
+}
+
+// Camino automático: anillo perimetral (envolvente convexa) algo afuera de las turbinas
+function autoRoadPerimeter() {
+  if (turbinePositions.length < 3) return;
+  const hull = convexHull(turbinePositions.map(p=>({x:p.x,y:p.y})));
+  if (hull.length < 3) return;
+  const cgx = hull.reduce((s,p)=>s+p.x,0)/hull.length;
+  const cgy = hull.reduce((s,p)=>s+p.y,0)/hull.length;
+  const marginPx = (_layout.diamM*0.9) * _layout.scaleUsed;   // ~0.9·D afuera
+  const ring = hull.map(p=>{
+    const dx=p.x-cgx, dy=p.y-cgy, L=Math.hypot(dx,dy)||1;
+    const ox=p.x+dx/L*marginPx, oy=p.y+dy/L*marginPx;
+    return _pxToM(ox, oy);
+  });
+  ring.push(ring[0]);   // cerrar el anillo
+  roads = [ring];
+  currentRoad = null; roadPreview = null;
+  calcParque(true);
+}
+
 function toggleStagger() {
   useStagger = !useStagger;
   const btn = document.getElementById('stagger-toggle-btn');
@@ -478,6 +543,7 @@ function drawParkDiagram(n, diam, sepPar, sepTrans) {
 
   // Canvas centre
   const cx = W/2, cy = H/2;
+  _layout = { cx, cy, scaleUsed, diamM: diam };   // para convertir px↔metros en los caminos
 
   // ── Auto positions: staggered grid rotated around centre ──
   // Odd rows (r=1,3,5…) are shifted +distTransM/2 in the transverse direction
@@ -515,6 +581,7 @@ function drawParkDiagram(n, diam, sepPar, sepTrans) {
     distParM, distTransM,
     windTravRad: wakeRad,   // ángulo de viaje del viento en el plano (x=cos, z=sin)
     fc: parkParams.fc,
+    roads: roads.map(r => r.map(p => ({ x:p.x, z:p.z }))),   // caminos en metros reales
     n
   };
   if (window._park3dOnState) window._park3dOnState();
@@ -555,6 +622,34 @@ function drawParkDiagram(n, diam, sepPar, sepTrans) {
     ctx.fill();
     ctx.restore();
   });
+
+  // ── ROADS (caminos internos) ──
+  // Se dibujan debajo de las turbinas. Cada camino: polilínea en metros → px.
+  const roadWpx = Math.max(3, (Math.max(8, diam*0.07)) * scaleUsed);  // ancho en px
+  function strokeRoad(ptsM, opts) {
+    if (!ptsM || ptsM.length < 1) return;
+    ctx.beginPath();
+    ptsM.forEach((m,i) => { const q=_mToPx(m); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); });
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    if (opts && opts.preview) {
+      ctx.strokeStyle='rgba(120,100,70,0.55)'; ctx.lineWidth=roadWpx;
+      ctx.setLineDash([8/vp.scale, 6/vp.scale]); ctx.stroke(); ctx.setLineDash([]);
+    } else {
+      ctx.strokeStyle='rgba(70,58,42,0.85)'; ctx.lineWidth=roadWpx; ctx.stroke();           // borde
+      ctx.strokeStyle='rgba(190,170,135,0.95)'; ctx.lineWidth=Math.max(1.5,roadWpx*0.62); ctx.stroke(); // ripio
+    }
+    // vértices (solo en edición)
+    if (opts && opts.nodes) {
+      ptsM.forEach(m=>{ const q=_mToPx(m); ctx.beginPath(); ctx.arc(q.x,q.y,roadWpx*0.6,0,Math.PI*2);
+        ctx.fillStyle='rgba(26,79,160,0.85)'; ctx.fill(); });
+    }
+  }
+  roads.forEach(r => strokeRoad(r));
+  if (currentRoad && currentRoad.length) {
+    const live = roadPreview ? currentRoad.concat([roadPreview]) : currentRoad;
+    strokeRoad(live, { preview:true });
+    strokeRoad(currentRoad, { nodes:true });
+  }
 
   // ── TURBINE ICONS ──
   positions.forEach((p,i) => {
@@ -716,10 +811,27 @@ function initCanvasDrag() {
     return minD<hitR ? idx : -1;
   }
 
+  // Punto de camino en METROS a partir del evento, con snap a la turbina más cercana
+  function roadSnapM(e) {
+    const wp = getWorld(e);
+    const idx = findNearest(wp);
+    const px = idx >= 0 ? turbinePositions[idx] : wp;
+    return _pxToM(px.x, px.y);
+  }
+
+  // Clic en modo dibujo → agrega un punto al camino en curso
+  canvas.addEventListener('click', e => {
+    if (!drawingRoad) return;
+    addRoadPoint(roadSnapM(e));
+    roadPreview = null;
+    calcParque(true);
+  });
+
   let panStart = null; // {x,y} in screen coords when pan started
   let panVpStart = null; // {tx,ty} at pan start
 
   canvas.addEventListener('mousedown', e => {
+    if (drawingRoad) { e.preventDefault(); return; }   // en modo dibujo no se hace pan/drag
     const wp = getWorld(e);
     dragIdx = findNearest(wp);
     if (dragIdx >= 0) {
@@ -738,6 +850,7 @@ function initCanvasDrag() {
   });
 
   canvas.addEventListener('mousemove', e => {
+    if (drawingRoad) { roadPreview = roadSnapM(e); calcParque(true); return; }  // rubber-band
     const wp = getWorld(e);
     if (dragIdx >= 0) {
       turbinePositions[dragIdx].x = wp.x + dragOffX;
@@ -763,8 +876,9 @@ function initCanvasDrag() {
     canvas.style.cursor='default';
   });
 
-  // Double-click: reset turbine positions
+  // Double-click: termina el camino (en modo dibujo) o resetea posiciones
   canvas.addEventListener('dblclick', () => {
+    if (drawingRoad) { finalizeRoad(); calcParque(true); return; }
     resetTurbinePositions();
     calcParque(true);
   });
@@ -786,6 +900,10 @@ function initCanvasDrag() {
   let touchPanStart=null, touchVpStart=null, pinchDist0=null, pinchScale0=null, pinchMid0=null;
 
   canvas.addEventListener('touchstart', e => {
+    if (drawingRoad && e.touches.length === 1) {   // tap agrega punto al camino
+      addRoadPoint(roadSnapM(e)); roadPreview = null; calcParque(true);
+      e.preventDefault(); return;
+    }
     if (e.touches.length === 1) {
       const wp = getWorld(e);
       dragIdx = findNearest(wp);

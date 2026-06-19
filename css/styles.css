@@ -1713,8 +1713,56 @@ input[type=range]:active::-webkit-slider-thumb {
   font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em;
   color: rgba(255,255,255,0.7); text-transform: uppercase;
 }
+/* selector de terreno en el modal 3D */
+.p3d-terrain {
+  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+}
+.p3d-terrain-btn {
+  font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.78);
+  padding: 7px 13px; border-radius: 999px; cursor: pointer;
+  background: rgba(12,22,34,0.5); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.14); transition: background .15s, color .15s, border-color .15s;
+}
+.p3d-terrain-btn:hover { background: rgba(12,22,34,0.72); color: #fff; }
+.p3d-terrain-btn.active {
+  background: linear-gradient(135deg, #1a7a30, #1a4fa0); color: #fff;
+  border-color: transparent; font-weight: 500;
+}
+
 @media (max-width: 640px) {
   .p3d-title { font-size: 14px; }
   .p3d-hint { display: none; }
   .p3d-chip { font-size: 10px; padding: 6px 10px; }
+  .p3d-terrain { top: 58px; }
+  .p3d-terrain-btn { font-size: 10px; padding: 5px 10px; }
+}
+
+/* ── barra de herramientas de caminos (layout 2D) ── */
+.road-toolbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 10px; padding: 9px 12px;
+  background: var(--surface2, #f4f6f4); border: 1px solid var(--border2, #d8e0d8);
+  border-radius: 10px;
+}
+.road-toolbar-label {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.04em;
+  color: var(--muted, #6a7a6a); margin-right: 2px;
+}
+.road-tool-btn {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.02em;
+  padding: 7px 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid rgba(26,79,160,0.3); background: #fff; color: var(--accent2, #1a4fa0);
+  transition: background .15s, color .15s, border-color .15s, transform .1s;
+}
+.road-tool-btn:hover { background: rgba(26,79,160,0.08); }
+.road-tool-btn:active { transform: translateY(1px); }
+.road-tool-btn.active {
+  background: linear-gradient(135deg, #1a7a30, #1a4fa0); color: #fff; border-color: transparent;
+}
+.road-tool-clear { color: #b3402e; border-color: rgba(179,64,46,0.3); }
+.road-tool-clear:hover { background: rgba(179,64,46,0.08); }
+.road-hint {
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent2, #1a4fa0);
+  flex-basis: 100%; margin-top: 2px;
 }
