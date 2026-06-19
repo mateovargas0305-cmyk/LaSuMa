@@ -1,0 +1,13 @@
+# Solo se versiona la calculadora v22 + el sitio (index.html, README).
+# Versiones anteriores, exports, informes y notas internas quedan locales.
+lasuma_calculadora_eolica_v19.html
+lasuma_calculadora_eolica_v20.html
+lasuma_calculadora_eolica_v21.html
+Tareas claude.txt
+Guardados/
+Informes/
+
+# Artefactos del sistema
+Thumbs.db
+.DS_Store
+_chrome_profile*/
