@@ -49,39 +49,54 @@
     MAT.nacelle = new THREE.MeshStandardMaterial({ color:0xe8ebef, roughness:0.5,  metalness:0.15 });
     MAT.blade   = new THREE.MeshStandardMaterial({ color:0xfbfcfd, roughness:0.4,  metalness:0.05, side:THREE.DoubleSide });
     MAT.ground  = new THREE.MeshStandardMaterial({ color:0x6f8a4d, roughness:1 });
-    MAT.road    = new THREE.MeshStandardMaterial({ color:0xe7ddc8, roughness:0.95, metalness:0, emissive:0x6b5f44, emissiveIntensity:0.5 }); // ripio claro
+    MAT.road    = new THREE.MeshStandardMaterial({ color:0x33312e, roughness:0.9, metalness:0, emissive:0x0c0b0a, side:THREE.DoubleSide }); // asfalto oscuro (alto contraste)
   }
 
-  // Construye una cinta de camino que sigue el terreno desde una polilínea en metros
+  // Construye un camino con RELIEVE (terraplén con taludes) que sigue el terreno.
+  // Tiene caras laterales → se ve desde cualquier ángulo, no sólo cenital.
   function buildRoadMesh(ptsM, widthW) {
     if (!ptsM || ptsM.length < 2) return null;
     var cl = ptsM.map(function(p){ return { x:p.x*WORLD, y:p.z*WORLD }; });  // centerline (x,z) en mundo
-    // resamplear cada ~6 unidades para que la cinta se adapte al relieve
-    var step = 6, samples = [];
+    var step = 5, samples = [];
     for (var i=0;i<cl.length-1;i++){
       var a=cl[i], b=cl[i+1], dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy);
       var n=Math.max(1, Math.ceil(L/step));
       for (var j=0;j<n;j++){ samples.push({ x:a.x+dx*(j/n), y:a.y+dy*(j/n) }); }
     }
     samples.push(cl[cl.length-1]);
-    var hw=widthW/2, verts=[], idx=[];
+
+    var hw=widthW/2, sh=hw*0.4;             // media calzada + talud
+    var rise=Math.max(0.4, widthW*0.38);    // altura del terraplén (visible a ras)
+    var verts=[], idx=[];
+    // 4 vértices por sección: botL, topL, topR, botR
     for (var k=0;k<samples.length;k++){
       var p=samples[k];
       var t = (k<samples.length-1) ? { x:samples[k+1].x-p.x, y:samples[k+1].y-p.y }
                                    : { x:p.x-samples[k-1].x, y:p.y-samples[k-1].y };
       var tl=Math.hypot(t.x,t.y)||1; t.x/=tl; t.y/=tl;
-      var nx=-t.y, nz=t.x;  // perpendicular en (x,z)
-      var lx=p.x+nx*hw, lz=p.y+nz*hw, rx=p.x-nx*hw, rz=p.y-nz*hw;
-      verts.push(lx, terrainH(lx,lz)+0.2, lz,  rx, terrainH(rx,rz)+0.2, rz);
+      var nx=-t.y, nz=t.x;                  // perpendicular en (x,z)
+      var bLx=p.x+nx*(hw+sh), bLz=p.y+nz*(hw+sh);
+      var tLx=p.x+nx*hw,      tLz=p.y+nz*hw;
+      var tRx=p.x-nx*hw,      tRz=p.y-nz*hw;
+      var bRx=p.x-nx*(hw+sh), bRz=p.y-nz*(hw+sh);
+      verts.push(
+        bLx, terrainH(bLx,bLz)+0.05, bLz,
+        tLx, terrainH(tLx,tLz)+rise, tLz,
+        tRx, terrainH(tRx,tRz)+rise, tRz,
+        bRx, terrainH(bRx,bRz)+0.05, bRz
+      );
     }
+    // 3 tiras (talud izq, calzada, talud der) entre secciones consecutivas
     for (var k2=0;k2<samples.length-1;k2++){
-      var a2=k2*2, b2=k2*2+1, c2=k2*2+2, d2=k2*2+3;
-      idx.push(a2,b2,c2, c2,b2,d2);
+      for (var s=0;s<3;s++){
+        var a2=k2*4+s, b2=k2*4+s+1, c2=(k2+1)*4+s, d2=(k2+1)*4+s+1;
+        idx.push(a2,c2,b2, b2,c2,d2);
+      }
     }
     var g=new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(verts,3));
     g.setIndex(idx); g.computeVertexNormals();
-    var m=new THREE.Mesh(g, MAT.road); m.receiveShadow=true;
+    var m=new THREE.Mesh(g, MAT.road); m.receiveShadow=true; m.castShadow=true;
     return m;
   }
 
